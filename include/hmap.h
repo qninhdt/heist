@@ -2,7 +2,6 @@
 #define __HMAP_H__
 
 #include "hcommon.h"
-#include "harray.h"
 
 #define hmap(K, V)                \
     struct {                      \
@@ -46,6 +45,24 @@
     __hmap_delete((__hmap) map, &__key, sizeof(map->__hmap_entry_type[0]->key)); \
 })
 
+#define hmap_free(map) __hmap_free((__hmap) map, sizeof(map->__hmap_entry_type[0]->key))
+
+#define hmap_copy(src, dst) \
+    __hmap_copy((__hmap) src, (__hmap) dst, sizeof(map->__hmap_entry_type[0]->key), sizeof(map->__hmap_entry_type[0]->value))
+
+#define hmap_new_copy(src) \
+    ((typeof(src)) __hmap_new_copy((__hmap) src, sizeof(src->__hmap_entry_type[0]->key), sizeof(src->__hmap_entry_type[0]->value)))
+
+#define hmap_set_key_func(map, copy_func_, free_func_) ({\
+    ((__hmap) map)->key_copy_func = (h_copy_func) __heist_copy_func_##copy_func_;\
+    ((__hmap) map)->key_free_func = (h_free_func) __heist_free_func_##free_func_;\
+})
+
+#define hmap_set_value_func(map, copy_func_, free_func_) ({\
+    ((__hmap) map)->value_copy_func = (h_copy_func) __heist_copy_func_##copy_func_;\
+    ((__hmap) map)->value_free_func = (h_free_func) __heist_free_func_##free_func_;\
+})
+
 typedef int8_t* __hmap_entry;
 
 typedef struct __hmap_s {
@@ -71,5 +88,9 @@ HEIST_API __hmap_entry __hmap_find_entry(__hmap map, hpointer key, size_t key_si
 HEIST_API __hmap_entry __hmap_find_or_create_entry(__hmap map, hpointer key, size_t key_size, size_t value_size);
 HEIST_API void __hmap_reserve(__hmap map, size_t new_length, size_t key_size, size_t value_size);
 HEIST_API void __hmap_delete(__hmap map, hpointer key, size_t key_size);
+HEIST_API void __hmap_free(__hmap map, size_t key_size);
+HEIST_API __hmap __hmap_new_copy(__hmap src, size_t key_size, size_t value_size);
+HEIST_API void __hmap_copy(__hmap src, __hmap dst, size_t key_size, size_t value_size);
+
 
 #endif // __HMAP_H__

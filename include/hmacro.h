@@ -102,4 +102,9 @@
     }                                                   \
     bool func(K a, K b)  
 
+#define __heist_copy_func_NULL NULL
+#define __heist_free_func_NULL NULL
+#define __heist_equak_func_NULL NULL
+#define __heist_hash_func_NULL NULL
+
 #endif // __HMACRO_H__

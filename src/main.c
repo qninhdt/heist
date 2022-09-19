@@ -28,38 +28,30 @@ H_EQUAL_FUNC(char*, str_equal, str1, str2) {
     return strcmp(str1, str2) == 0;
 }
 
+H_COPY_FUNC(char*, str_copy, src) {
+    char* dst = malloc(strlen(src));
+    strcpy(dst, src);
+    return dst;
+}
+
+H_FREE_FUNC(char*, str_free, str) {
+    free(str);
+}
+
+H_COPY_FUNC(int, int_copy, num) {
+    return num*100;
+}
 
 int main() {
-    hmap(char*, Room) tower = hmap_new(str_hash, str_equal);
+    hmap(char*, int) tower = hmap_new(str_hash, str_equal);
+    hmap_set_key_func(tower, str_copy, str_free);
+    hmap_set_value_func(tower, int_copy, NULL);
 
-    clock_t t;
-    t = clock();
+    hmap_set(tower, "qninh", 12);
+    
+    typeof(tower) copy = hmap_new_copy(tower);
 
-    for (int i=0; i<2000000; ++i) {
-        char* name = malloc(12);
-        char* nickname = malloc(12);
-        sprintf(name, "qninh-%d", i);
-        sprintf(nickname, "qn-%d", i);
-        hmap_find_or_create_entry(tower, nickname)->value = ((Room) { name });
-    }
-
-    t = clock() - t;
-    double time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
-    printf("Set time: %fs\n", time_taken);
-
-    t = clock();
-
-    for (int i=0; i<2000000; ++i) {
-        char* nickname = malloc(32);
-        sprintf(nickname, "qn-%d", i);
-        hmap_get(tower, nickname);
-    }
-
-    hmap_delete(tower, "qn-0");
-
-    t = clock() - t;
-    time_taken = ((double)t)/CLOCKS_PER_SEC; // calculate the elapsed time
-    printf("Get time: %fs\n", time_taken);
+    printf("%d %d\n", hmap_get(copy, "qninh"), hmap_get(tower, "qninh"));
 }
 
 // ----------------------------------------------------
@@ -89,13 +81,11 @@ H_FREE_FUNC(Floor, floor_free, floor) {
 
 void test_list_and_array() {
     harray(Floor) tower = harray_new();
-    harray_set_copy_func(tower, floor_copy);
-    harray_set_free_func(tower, floor_free);
+    harray_set_func(tower, floor_copy, floor_free);
 
     for (int i=1;i<=5;++i) {
         Floor floor = hlist_new();
-        hlist_set_copy_func(floor, room_copy);
-        hlist_set_free_func(floor, room_free);
+        hlist_set_func(floor, room_copy, room_free);
         
         for (int j=1;j<=i;++j) {
             char* name = malloc(32);

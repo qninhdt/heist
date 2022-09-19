@@ -81,11 +81,10 @@
     back;                                                  \
 })
 
-#define harray_set_copy_func(arr, func) \
-    ((__harray) arr)->copy_func = (h_copy_func) __heist_copy_func_##func;
-
-#define harray_set_free_func(arr, func) \
-    ((__harray) arr)->free_func = (h_free_func) __heist_free_func_##func;
+#define harray_set_func(arr, copy_func_, free_func_) ({\
+    ((__harray) arr)->copy_func = (h_copy_func) __heist_copy_func_##copy_func_;\
+    ((__harray) arr)->free_func = (h_free_func) __heist_free_func_##free_func_;\
+})
 
 #define harray_empty(arr) (arr->length == 0)
 

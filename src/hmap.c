@@ -11,8 +11,8 @@ static size_t good_primes[] = {
 
 static size_t i_dont_know = sizeof(good_primes)/sizeof(size_t);
 
-static const uint8_t DELETED_;
-static const void* DELETED = &DELETED_;
+static const char __DELETED;
+static const void* DELETED = &__DELETED;
 
 __hmap __hmap_new(h_hash_func hash_func, h_equal_func free_func) {
     __hmap map = malloc(sizeof(struct __hmap_s));
@@ -118,10 +118,10 @@ void __hmap_delete(__hmap map, hpointer key, size_t key_size) {
     while ((entry = map->bucket[index]) != NULL) {
         if (entry != DELETED && map->equal_func(entry, key)) {
             if (map->key_free_func) {
-                map->key_free_func(key);
+                map->key_free_func(entry);
             }
             if (map->value_free_func) {
-                map->value_free_func(key + key_size);
+                map->value_free_func(entry + key_size);
             }
             map->bucket[index] = (__hmap_entry) DELETED;
             map->length -= 1;
@@ -134,4 +134,58 @@ void __hmap_delete(__hmap map, hpointer key, size_t key_size) {
     }
 
     // handle error;
+}
+
+void __hmap_free(__hmap map, size_t key_size) {
+    for (int idx = 0; idx < map->capacity; ++idx) {
+        __hmap_entry entry = map->bucket[idx];
+
+        if (entry == NULL || entry == DELETED) continue;
+
+        if (map->key_free_func) {
+            map->key_free_func(entry);
+        }
+
+        if (map->value_free_func) {
+            map->value_free_func(entry + key_size);
+        }
+
+        free(entry);
+    }
+
+    free(map);
+}
+
+void __hmap_copy(__hmap src, __hmap dst, size_t key_size, size_t value_size) {
+    memcpy(dst, src, sizeof(struct __hmap_s));
+
+    dst->bucket = calloc(dst->capacity, sizeof(__hmap_entry));
+
+    for (int idx = 0; idx < src->capacity; ++idx) {
+        __hmap_entry entry = src->bucket[idx];
+
+        if (entry == NULL || entry == DELETED) {
+            dst->bucket[idx] = entry;
+        } else {
+            dst->bucket[idx] = malloc(key_size + value_size);
+
+            if (src->key_copy_func) {
+                src->key_copy_func(entry, dst->bucket[idx]);
+            } else {
+                memcpy(dst->bucket[idx], entry, key_size);
+            }
+
+            if (src->value_copy_func) {
+                src->value_copy_func(entry + key_size, dst->bucket[idx] + key_size);
+            } else {
+                memcpy(dst->bucket[idx] + key_size, entry + key_size, value_size);
+            }
+        }
+    }
+}
+
+__hmap __hmap_new_copy(__hmap src, size_t key_size, size_t value_size) {
+    __hmap dst = malloc(sizeof(struct __hmap_s));
+    __hmap_copy(src, dst, key_size, value_size);
+    return dst;
 }

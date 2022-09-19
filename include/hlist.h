@@ -68,13 +68,10 @@
     list = NULL;                   \
 })
 
-#define hlist_set_copy_func(list, func) \
-    ((__hlist) list)->copy_func = (h_copy_func) &__heist_copy_func_##func;
-
-#define hlist_set_free_func(list, func) \
-    ((__hlist) list)->free_func = (h_free_func) &__heist_free_func_##func;
-
-
+#define hlist_set_func(list, copy_func_, free_func_) ({\
+    ((__hlist) list)->copy_func = (h_copy_func) &__heist_copy_func_##copy_func_;\
+    ((__hlist) list)->free_func = (h_free_func) &__heist_free_func_##free_func_;\
+})
 
 #define hlist_copy(src, dst) __hlist_copy((__hlist) src, (__hlist) dst)
 
