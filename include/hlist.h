@@ -3,15 +3,15 @@
 
 #include "hcommon.h"
 
-#define hlist(T)                                        \
-    struct {                                             \
-        size_t length;                                   \
-        __hlist __base_type[0];                         \
-        struct CAT(__heist_private_hlist_node_,__LINE__) {            \
-            struct CAT(__heist_private_hlist_node_,__LINE__) * next;  \
-            struct CAT(__heist_private_hlist_node_,__LINE__) * prev;  \
-            T value;                                     \
-        } *front, *back, *__node_type[0];                \
+#define hlist(T)                                                   \
+    struct {                                                       \
+        size_t length;                                             \
+        __hlist __base_type[0];                                    \
+        struct CAT(__heist_hlist_node_##T##_,__LINE__) {           \
+            struct CAT(__heist_hlist_node_##T##_,__LINE__)* next;  \
+            struct CAT(__heist_hlist_node_##T##_,__LINE__)* prev;  \
+            T value;                                               \
+        } *front, *back, *__node_type[0];                          \
     } *
 
 #define hlist_node(list) typeof(list->__node_type[0])
@@ -64,23 +64,16 @@
 #define hlist_empty(list) (list->length == 0)
 
 #define hlist_free(list) ({        \
-    __hlist_free((__hlist) list); \
-    list = NULL;                    \
+    __hlist_free((__hlist) list);  \
+    list = NULL;                   \
 })
 
-#define hlist_set_copy_func(list, func) ({ \
-    void __heist_private_##arr##_copy_func(typeof(list->__node_type[0]->value)* src, typeof(list->__node_type[0]->value)* dst) {\
-        *dst = func(*src);\
-    }\
-    ((__hlist) list)->copy_func = (h_copy_func) &__heist_private_##arr##_copy_func;\
-})
+#define hlist_set_copy_func(list, func) \
+    ((__hlist) list)->copy_func = (h_copy_func) &__heist_copy_func_##func;
 
-#define hlist_set_free_func(list, func) ({ \
-    void __heist_private_##arr##_free_func(typeof(list->__node_type[0]->value)* src) {\
-        func(*src);\
-    }\
-    ((__hlist) list)->free_func = (h_free_func) &__heist_private_##arr##_free_func;\
-})
+#define hlist_set_free_func(list, func) \
+    ((__hlist) list)->free_func = (h_free_func) &__heist_free_func_##func;
+
 
 
 #define hlist_copy(src, dst) __hlist_copy((__hlist) src, (__hlist) dst)

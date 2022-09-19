@@ -7,7 +7,7 @@ __harray __harray_new_empty() {
     __harray arr = malloc(sizeof(struct __harray_s));
     
     arr->length    = 0;
-    arr->capacity  = HARRAY_DEFAULT_CAPACITY;
+    arr->capacity  = 0;
     arr->data      = NULL;
     arr->copy_func = NULL;
     arr->free_func = NULL;
@@ -21,7 +21,9 @@ void __harray_reserve(__harray arr, size_t n, size_t element_size) {
         new_capacity = HARRAY_COMPUTE_NEXT_CAPACITY(new_capacity);
     }
 
-    hpointer new_data_addr = realloc(arr->data, new_capacity * element_size);
+    hpointer new_data_addr = arr->data == NULL
+        ? malloc(new_capacity * element_size)
+        : realloc(arr->data, new_capacity * element_size);
 
     if (new_data_addr == NULL) {
         // throw error
@@ -29,11 +31,6 @@ void __harray_reserve(__harray arr, size_t n, size_t element_size) {
 
     arr->data = new_data_addr;
     arr->capacity = new_capacity;
-}
-
-void __harray_resize(__harray arr, size_t new_length, size_t element_size) {
-    __harray_reserve(arr, new_length, element_size);
-    arr->length = new_length;
 }
 
 void __harray_insert_empty(__harray arr, size_t pos, size_t length, size_t element_size) {
@@ -116,4 +113,19 @@ __harray __harray_new_copy(__harray src, size_t element_size) {
     __harray dst = malloc(sizeof(struct __harray_s));
     __harray_copy(src, dst, element_size);
     return dst;
+}
+
+void __harray_resize(__harray arr, size_t new_length, size_t element_size) {
+    __harray_reserve(arr, new_length, element_size);
+    arr->length = new_length;
+}
+
+void __harray_resize_with_init(__harray arr, size_t new_length, hpointer value_ptr, size_t element_size) {
+    __harray_reserve(arr, new_length, element_size);
+
+    for (size_t pos = arr->length; pos < new_length; ++pos) {
+        memcpy(arr->data + pos*element_size, value_ptr, element_size);
+    }
+
+    arr->length = new_length;
 }

@@ -8,7 +8,7 @@
 #endif
 
 #ifndef HARRAY_COMPUTE_NEXT_CAPACITY 
-    #define HARRAY_COMPUTE_NEXT_CAPACITY(capacity) (capacity << 1)
+    #define HARRAY_COMPUTE_NEXT_CAPACITY(capacity) (capacity ? capacity << 1 : 1)
 #endif
 
 /**
@@ -35,9 +35,7 @@
  * @param arr Current array
  * @param n   New length
  */
-#define harray_reserve(arr, n) __harray_reserve((__harray) arr, n, sizeof(src->data[0]))
-
-#define harray_resize(arr, new_length) __harray_resize((__harray) arr, new_length, , sizeof(src->data[0]))
+#define harray_reserve(arr, n) __harray_reserve((__harray) arr, n, sizeof(arr->data[0]))
 
 #define harray_get(arr, pos) (arr->data[pos])
 #define harray_set(arr, pos, val) (arr->data[pos] = val)
@@ -64,7 +62,7 @@
     __harray_insert_n((__harray) arr, pos, val, sizeof(arr->data[0]))
 
 #define harray_foreach(arr, val, i)                                  \
-    for (size_t i=0, __b0=1; i < arr->length; ++i, __b0=1)            \
+    for (register size_t i=0, __b0=1; i < arr->length; ++i, __b0=1)  \
         for (typeof(arr->data[0]) val=arr->data[i]; __b0; __b0=!__b0) 
 
 #define harray_front(arr) (arr->data[0])
@@ -83,25 +81,25 @@
     back;                                                  \
 })
 
-#define harray_set_copy_func(arr, func) ({ \
-    void __heist_private_##arr##_copy_func(typeof(typeof(arr->data[0]))* src, typeof(arr->data[0])* dst) {\
-        *dst = func(*src);\
-    }\
-    ((__harray) arr)->copy_func = (h_copy_func) &__heist_private_##arr##_copy_func;\
-})
+#define harray_set_copy_func(arr, func) \
+    ((__harray) arr)->copy_func = (h_copy_func) __heist_copy_func_##func;
 
-#define harray_set_free_func(arr, func) ({ \
-    void __heist_##arr##_free_func(typeof(arr->data[0])* src) {\
-        func(*src);\
-    }\
-    ((__harray) arr)->free_func = (h_free_func) &__heist_##arr##_free_func;\
-})
+#define harray_set_free_func(arr, func) \
+    ((__harray) arr)->free_func = (h_free_func) __heist_free_func_##func;
 
 #define harray_empty(arr) (arr->length == 0)
 
 #define harray_free(arr) ({        \
     __harray_free((__harray)arr, sizeof(arr->data[0])); \
     arr = NULL;                     \
+})
+
+#define harray_resize(arr, new_length) \
+    __harray_resize((__harray) arr, new_length, sizeof(arr->data[0]))
+
+#define harray_resize_with_init(arr, new_length, value) ({ \
+    typeof(arr->data[0]) __value = value; \
+    __harray_resize_with_init((__harray) arr, new_length, &__value, sizeof(arr->data[0]));\
 })
 
 #define harray_copy(src, dst) __harray_copy((__harray) src, (__harray) dst, sizeof(src->data[0]))
@@ -122,5 +120,8 @@ HEIST_API void __harray_resize(__harray arr, size_t new_length, size_t element_s
 HEIST_API void __harray_insert_n(__harray arr, size_t pos, __harray val, size_t element_size);
 HEIST_API void __harray_free(__harray arr, size_t element_size);
 HEIST_API void __harray_copy(__harray src, __harray dst, size_t element_size);
+HEIST_API void __harray_reserve(__harray arr, size_t n, size_t element_size);
+HEIST_API void __harray_resize(__harray arr, size_t new_length, size_t element_size);
+HEIST_API void __harray_resize_with_init(__harray arr, size_t new_length, hpointer value_ptr, size_t element_size);
 
 #endif // __HARRAY_H__

@@ -10,6 +10,7 @@ add_executable(heist
     src/main.c 
     src/harray.c
     src/hlist.c 
+    src/hmap.c
 )
 
 target_include_directories(heist PUBLIC include)

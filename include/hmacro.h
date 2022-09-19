@@ -74,4 +74,32 @@
 
 #define HEIST_API extern
 
+#define H_COPY_FUNC(T, func, arg) \
+    T func(T arg);\
+    void __heist_copy_func_##func(T* src, T* dst) { \
+        *dst = func(*src); \
+    }\
+    T func(T arg)
+
+#define H_FREE_FUNC(T, func, arg) \
+    void func(T arg);\
+    void __heist_free_func_##func(T* src) { \
+        func(*src); \
+    }\
+    void func(T arg)
+
+#define H_HASH_FUNC(K, func, key)                  \
+    uint32_t func(K key);                          \
+    uint32_t __heist_hash_func_##func(K* key_ptr) {\
+        return func(*key_ptr);                     \
+    }                                              \
+    uint32_t func(K key)
+
+#define H_EQUAL_FUNC(K, func, a, b)                     \
+    bool func(K a, K b);                                \
+    bool __heist_equal_func_##func(K* a_ptr, K* b_ptr) {\
+        return func(*a_ptr, *b_ptr);                    \
+    }                                                   \
+    bool func(K a, K b)  
+
 #endif // __HMACRO_H__
