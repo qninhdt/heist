@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(
     heist
     VERSION 1.0
-    DESCRIPTION "Just a tity C library."
+    DESCRIPTION "Just a tiny C library."
 )
 
 add_executable(heist 
